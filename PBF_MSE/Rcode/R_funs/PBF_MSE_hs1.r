@@ -26,11 +26,14 @@ scn = paste(scnnum, "/", sep = "")
 scnw = paste(scnnum, "\\", sep = "")
 
 #Specify parent directories path 
-pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
-pwin = "C:\\Users\\desiree.tommasi\\Documents\\Bluefin\\PBF_MSE\\"
+#pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
+#pwin = "C:\\Users\\desiree.tommasi\\Documents\\Bluefin\\PBF_MSE\\"
+pdir = "D:/Git_space/ISC/PBF/PBF_MSE/"
+pwin = "D:\\Git_space\\ISC\\PBF\\PBF_MSE\\"
 
 #Specify the path of conditioned initial OM
-sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
+#sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
+sdir = "D:/Git_space/ISC/PBF/PBF_MSE/Condition/"
 
 #Specify vectors where to save output (output is from OM unless otherwise specified) for the future simulation years
 Rdat = 1:30 # recruits
