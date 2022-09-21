@@ -23,7 +23,8 @@ EM_fun <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, 
   #create directory for the operating model
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep, sep = ""))
   cmddir = "mkdir EM"
-  shell(cmd = cmddir)
+  #shell(cmd = cmddir)
+  system(command = cmddir) # for Linux
   
   #move to directory with Bootstrap run
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep, "/Boot/", sep = ""))
@@ -84,8 +85,15 @@ EM_fun <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, 
   #Move to the hcr directory 
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep,"/Boot/", sep=""))
   
-  command_mv = paste("for %I in (forecast.ss) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\EM\\", sep ="")
-  shell(cmd = command_mv)
+  #command_mv = paste("for %I in (forecast.ss) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\EM\\", sep ="")
+  #shell(cmd = command_mv)
+  
+  # for Linux
+  flist_str <- stringr::str_c("forecast.ss")
+  command_mv <- stringr::str_c(
+    "for file in ", flist_str, "; do cp $file ", pwin, hsw, hcrw, scnw, itr, "/", tstep, "/EM/", "; done"
+  )
+  system(command = command_mv)
   
 #***************************CHANGE CTL FILE*************************************
   ctl_in = paste(sdir, scn, "SAM/control_simple.ss", sep = "")
@@ -123,13 +131,18 @@ EM_fun <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, 
   
   #generate the .bat file to run the model
   Path = paste(pdir, hs, hcr, scn, itr, "/", tstep,"/EM/", sep = "")
-  filename_em  <-paste(Path,"runem.bat",sep="")
-  batchtext_em = paste(pwin,"SS_model\\ss -nohess", sep="")
+  #filename_em  <-paste(Path,"runem.bat",sep="")
+  #batchtext_em = paste(pwin,"SS_model\\ss -nohess", sep="")
+  filename_em  <-paste(Path,"runem.sh",sep="")            # for Linux
+  batchtext_em = paste(pwin,"SS_model/ss -nohess",sep="") # for Linux
   writeLines(batchtext_em,filename_em)
   
   setwd(Path)
-  command_run_em="runem.bat"
-  shell(cmd= command_run_em)
+  #command_run_em="runem.bat"
+  #shell(cmd= command_run_em)
+  command_run_em="runem.sh" # for Linux
+  system(command = stringr::str_c("chmod +x ", command_run_em)) # for Linux: give execution permission to the shell script
+  system(command = stringr::str_c("./", command_run_em))        # for Linux: need "./" before *.sh to run
   
   
 }

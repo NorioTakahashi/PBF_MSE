@@ -23,7 +23,8 @@ OMBoot_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr
   #create directory for the Bootstrap routine
   setwd(paste(pdir, hs, hcr, scn, itr,"/",tstep, sep = ""))
   cmddir = "mkdir Boot"
-  shell(cmd = cmddir)
+  #shell(cmd = cmddir)
+  system(command = cmddir) # for Linux
   
 #*****************************CHANGE FORECAST FILE*******************************************   
   #Specify inputs to the change_for function
@@ -43,12 +44,12 @@ OMBoot_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr
   
   #Specify inputs to change_rec_devs function
   if (tstep == 1){
-    pfile_in = paste(sdir,scn, "ss.PAR",sep="")
+    pfile_in = paste(sdir,scn, "ss.par",sep="")
   } else {
-    pfile_in = paste(pdir, hs, hcr, scn, itr,"/",(tstep-1),"/Boot/ss.PAR", sep = "")
+    pfile_in = paste(pdir, hs, hcr, scn, itr,"/",(tstep-1),"/Boot/ss.par", sep = "")
   }
   
-  pfile_out = paste(pdir, hs, hcr, scn, itr, "/",tstep,"/Boot/ss.PAR", sep="")
+  pfile_out = paste(pdir, hs, hcr, scn, itr, "/",tstep,"/Boot/ss.par", sep="")
   
   #Modify par file to include the recruitment deviations for the next assessment cycle
   rec_devsn = rec_devs[asmt_t[tstep]:((asmt_t[tstep])+(tasmt-1))]
@@ -116,13 +117,19 @@ OMBoot_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr
   
   #generate the .bat file to run the model
   Path = paste(pdir, hs, hcr, scn, itr, "/", tstep,"/Boot/", sep="")
-  filename_om  <-paste(Path,"ssnohess.bat",sep="")
-  batchtext_om = paste(pwin,"SS_model\\ss -maxfn 0 -phase 50 -nohess",sep="")
+  #filename_om  <-paste(Path,"ssnohess.bat",sep="")
+  #batchtext_om = paste(pwin,"SS_model\\ss -maxfn 0 -phase 50 -nohess",sep="")
+  filename_om  <-paste(Path,"ssnohess.sh",sep="")                            # for Linux
+  batchtext_om = paste(pwin,"SS_model/ss -maxfn 0 -phase 50 -nohess",sep="") # for Linux
   writeLines(batchtext_om,filename_om)
   
   setwd(Path)
-  command_run_om="ssnohess.bat"
-  shell(cmd= command_run_om)
+  #command_run_om="ssnohess.bat"
+  #shell(cmd= command_run_om)
+  #system(command = command_run_om)
+  command_run_om="ssnohess.sh" # for Linux
+  system(command = stringr::str_c("chmod +x ", command_run_om)) # for Linux: give execution permission to the shell script
+  system(command = stringr::str_c("./", command_run_om))        # for Linux: need "./" before *.sh to run
   
   
 }

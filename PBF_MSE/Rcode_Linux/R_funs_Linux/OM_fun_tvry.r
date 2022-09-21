@@ -25,7 +25,8 @@ OM_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, ts
   #create directory for the operating model
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep, sep = ""))
   cmddir = "mkdir OM"
-  shell(cmd = cmddir)
+  #shell(cmd = cmddir)
+  system(command = cmddir) # for Linux
   
   #move to directory with Bootstrap run
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep, "/Boot/", sep = ""))
@@ -84,13 +85,20 @@ OM_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, ts
   #Move to the hcr directory 
   setwd(paste(pdir, hs, hcr, scn, itr,"/", tstep,"/Boot/", sep=""))
 
-  command_mv = paste("for %I in (forecast.ss) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
-  shell(cmd = command_mv)
-  command_mv = paste("for %I in (ss.PAR) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
-  shell(cmd = command_mv)
-  command_mv = paste("for %I in (Boot.ctl) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
-  shell(cmd = command_mv)
+  #command_mv = paste("for %I in (forecast.ss) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
+  #shell(cmd = command_mv)
+  #command_mv = paste("for %I in (ss.PAR) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
+  #hell(cmd = command_mv)
+  #command_mv = paste("for %I in (Boot.ctl) do copy %I ", pwin, hsw, hcrw, scnw, itr, "\\",tstep,"\\OM\\", sep ="")
+  #shell(cmd = command_mv)
   
+  # for Linux
+  flist_str <- stringr::str_c("forecast.ss", "ss.par", "Boot.ctl", sep = " ")
+  command_mv <- stringr::str_c(
+    "for file in ", flist_str, "; do cp $file ", pwin, hsw, hcrw, scnw, itr, "/", tstep, "/OM/", "; done"
+    )
+  system(command = command_mv)
+
 #*************************CHANGE STARTER FILE****************************************
   #Modify starter file to run OM with new catch data without estimating parameters 
   
@@ -120,13 +128,18 @@ OM_fun_tvry <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, ts
   
   #generate the .bat file to run the model
   Path = paste(pdir, hs, hcr, scn, itr, "/", tstep,"/OM/", sep="")
-  filename_om  <-paste(Path,"ssnohess.bat",sep="")
-  batchtext_om = paste(pwin,"SS_model\\ss -maxfn 0 -phase 50 -nohess",sep="")
+  #filename_om  <-paste(Path,"ssnohess.bat",sep="")
+  #batchtext_om = paste(pwin,"SS_model\\ss -maxfn 0 -phase 50 -nohess",sep="")
+  filename_om  <-paste(Path,"ssnohess.sh",sep="")                            # for Linux
+  batchtext_om = paste(pwin,"SS_model/ss -maxfn 0 -phase 50 -nohess",sep="") # for Linux
   writeLines(batchtext_om,filename_om)
   
   setwd(Path)
-  command_run_om="ssnohess.bat"
-  shell(cmd= command_run_om)
+  #command_run_om="ssnohess.bat"
+  #shell(cmd= command_run_om)
+  command_run_om="ssnohess.sh" # for Linux
+  system(command = stringr::str_c("chmod +x ", command_run_om)) # for Linux: give execution permission to the shell script
+  system(command = stringr::str_c("./", command_run_om))        # for Linux: need "./" before *.sh to run
   
 }
   

@@ -17,13 +17,13 @@ library(reshape2)
 
 #Specify path of parent directory
 #pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
-pdir = "D:/Git_space/ISC/PBF/PBF_MSE/"
+pdir = "~/PBF_test/PBF_MSE/"
 #set working directory to where all functions needed are stored
 setwd(paste(pdir,"Rcode/R_funs", sep = ""))
 
 #Specify the path of conditioned initial OM
 #sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
-sdir = "D:/Git_space/ISC/PBF/PBF_MSE/Condition/"
+sdir = "~/PBF_test/PBF_MSE/Condition/"
 
 #source all the functions
 file.sources = list.files()

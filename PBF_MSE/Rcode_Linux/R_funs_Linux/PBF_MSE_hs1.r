@@ -15,25 +15,28 @@ PBF_MSE_hs1 = function(hsnum,hcrnum,scnnum,itr, Bthr, Blim) {
 
 #specify the path for the harvest strategy that is being run
 hs = paste(hsnum, "/", sep = "")
-hsw = paste(hsnum, "\\", sep = "")
+#hsw = paste(hsnum, "\\", sep = "")
+hsw = paste(hsnum, "/", sep = "") # for Linux
 
 #specify the path for the harvest control rule (i.e. combination of reference points) within that hs that is being run
 hcr = paste(hcrnum, "/", sep = "")
-hcrw = paste(hcrnum, "\\", sep = "")
+#hcrw = paste(hcrnum, "\\", sep = "")
+hcrw = paste(hcrnum, "/", sep = "") # for Linux
 
 #specify the path for the scenario (i.e. om model type) that hs that is being run
 scn = paste(scnnum, "/", sep = "")
-scnw = paste(scnnum, "\\", sep = "")
+#scnw = paste(scnnum, "\\", sep = "")
+scnw = paste(scnnum, "/", sep = "") # for Linux
 
 #Specify parent directories path 
 #pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
 #pwin = "C:\\Users\\desiree.tommasi\\Documents\\Bluefin\\PBF_MSE\\"
-pdir = "D:/Git_space/ISC/PBF/PBF_MSE/"
-pwin = "D:\\Git_space\\ISC\\PBF\\PBF_MSE\\"
+pdir = "~/PBF_test/PBF_MSE/"
+pwin = "~/PBF_test/PBF_MSE/"
 
 #Specify the path of conditioned initial OM
 #sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
-sdir = "D:/Git_space/ISC/PBF/PBF_MSE/Condition/"
+sdir = "~/PBF_test/PBF_MSE/Condition/"
 
 #Specify vectors where to save output (output is from OM unless otherwise specified) for the future simulation years
 Rdat = 1:30 # recruits
@@ -62,7 +65,8 @@ setwd(paste(pdir,hs, hcr, scn, sep = ""))
 
 #create directory for each iteration (i.e. different recruitment deviations)
 cmddir = paste("mkdir", itr)
-shell(cmd = cmddir)
+#shell(cmd = cmddir)
+system(command = cmddir) # for Linux
 
 #**************************************************************************************
 #Generate recruitment deviations
@@ -71,7 +75,8 @@ shell(cmd = cmddir)
 setwd(paste(pdir, hs, hcr, scn, itr, sep = ""))
 
 #Create a folder where to store deviations for each MSE iteration (i.e. 30 year simulation)
-shell(cmd = "mkdir Rec_dev")
+#shell(cmd = "mkdir Rec_dev")
+system(command = "mkdir Rec_dev") # for Linux
 
 #generate random recruitment deviations for the 30 years of the simulation given the specified sigma (e.g. 0.6)
 rec_devs = recdevs_mse(itr, 30, 0.6)
@@ -85,7 +90,8 @@ for (tstep in 1:length(asmt_t)){
   #create directory for new time step where the new dat file will be saved
   setwd(paste(pdir,hs, hcr, scn, itr, sep = ""))
   cmddir = paste("mkdir", tstep)
-  shell(cmd = cmddir)
+  #shell(cmd = cmddir)
+  system(command = cmddir) # for Linux
   
   #*************************************************************************************
   #Step 1: Set the catch for the next two years (based on assessment frequency)
