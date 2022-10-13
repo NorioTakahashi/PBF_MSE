@@ -5,6 +5,8 @@ PBF_MSE.Rproj
 
 *~
 
+*.pdf
+
 .Rproj.user
 .Rhistory
 .RData
