@@ -1,5 +1,5 @@
 #' Runs the PBF MSE framework for the specified number of iterations
-#' Unlike hs1, this doe snot use catch ratios but calculates catch per fleet using the relF and fmultiplier
+#' Calculates catch per fleet using the relF and fmultiplier
 #' Note that this was created to be run using the wrapper function MSE_prll.R
 #' @param hsnum number characterizing the harvest strategy being run
 #' @param hcrnum number characterizing the harvest control rule being run
@@ -8,7 +8,8 @@
 #' @param Bthr the fraction of unifished biomass the threshold reference point refers to
 #' @param FBtrh the fraction of Btrh to consider for the threshold reference point
 #' @param Blim the fraction of unfished biomass the limit reference point refers to
-#' @param sa will a stock assessement be carried out or not, sa=0=no stock assessement, sa=1=stock assessement/em
+#' @param sa will a stock assessment be carried out or not, sa=0=no stock assessment, sa=1=stock assessment/em
+#' @param Fmin specifies the fraction of Ftarget that the minimum F is set to once the LRP is reached
 #' Note that the F target is specified in the forecast file. The fishing intensity is measured as the spawning potential ratio (SPR)
 #' @return a data frame of output for performance statistics
 #' @author D.Tommasi
@@ -35,27 +36,27 @@ pwin = "C:\\Users\\desiree.tommasi\\Documents\\Bluefin\\PBF_MSE\\"
 sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
 
 #Specify vectors where to save output (output is from OM unless otherwise specified) for the future simulation years
-Rdat = 1:30 # current recruits
-SPBdat = 1:30 # current spawning biomass
-Btot = 1:30 # current total biomass
-Tdat = 1:30 # current total catch
-TACdt = 1:30 # current total TAC
-TACWsdt = 1:30 # current total TAC for WPO small fish fleets
-TACWldt = 1:30 # current total TAC for WPO large fish fleets
-TACWmdt = 1:30 # current total TAC for WPO mixed fish fleets
-TACEdt = 1:30 # current total TAC for EPO
-Ddat = 1:30 # current depletion
-SPRdat = 1:30 # current fishing intensity (1-SPR)
-B0dat = 1:30 # SSB0 from em
-B0dat_om = 1:30 # SSB0 from om
-Ftgt_om = 1:30 # F target (exploitation intensity leading to the SPR specified in the forcast file) from om
-Ftgt_em = 1:30 # F target (exploitation intensity leading to the SPR specified in the forcast file) from em
-R_em = 1:30
-SPB_em = 1:30
-D_em = 1:30
-SPR_em = 1:30
-Btot_em = 1:30
-C_em = 1:30
+Rdat = 1:(length(asmt_t)*tasmt) # current recruits
+SPBdat = 1:(length(asmt_t)*tasmt) # current spawning biomass
+Btot = 1:(length(asmt_t)*tasmt) # current total biomass
+Tdat = 1:(length(asmt_t)*tasmt) # current total catch
+TACdt = 1:(length(asmt_t)*tasmt) # current total TAC
+TACWsdt = 1:(length(asmt_t)*tasmt) # current total TAC for WPO small fish fleets
+TACWldt = 1:(length(asmt_t)*tasmt) # current total TAC for WPO large fish fleets
+TACWmdt = 1:(length(asmt_t)*tasmt) # current total TAC for WPO mixed fish fleets
+TACEdt = 1:(length(asmt_t)*tasmt) # current total TAC for EPO
+Ddat = 1:(length(asmt_t)*tasmt) # current depletion
+SPRdat = 1:(length(asmt_t)*tasmt) # current fishing intensity (1-SPR)
+B0dat = 1:(length(asmt_t)*tasmt) # SSB0 from em
+B0dat_om = 1:(length(asmt_t)*tasmt) # SSB0 from om
+Ftgt_om = 1:(length(asmt_t)*tasmt) # F target (exploitation intensity leading to the SPR specified in the forcast file) from om
+Ftgt_em = 1:(length(asmt_t)*tasmt) # F target (exploitation intensity leading to the SPR specified in the forcast file) from em
+R_em = 1:(length(asmt_t)*tasmt)
+SPB_em = 1:(length(asmt_t)*tasmt)
+D_em = 1:(length(asmt_t)*tasmt)
+SPR_em = 1:(length(asmt_t)*tasmt)
+Btot_em = 1:(length(asmt_t)*tasmt)
+C_em = 1:(length(asmt_t)*tasmt)
 
 #set working directory 
 setwd(paste(pdir,hs, hcr, scn, sep = ""))
@@ -70,10 +71,10 @@ shell(cmd = cmddir)
 #set working directory to base iteration
 setwd(paste(pdir, hs, hcr, scn, itr, sep = ""))
 
-#Create a folder where to store deviations for each MSE iteration (i.e. 30 year simulation), and the implementation error
+#Create a folder where to store deviations for each MSE iteration (i.e. 24 year simulation), and the implementation error
 shell(cmd = "mkdir Rec_dev")
 
-rec_devs = recdevs_mse(itr, 30, 0.6)
+rec_devs = recdevs_mse(itr, (length(asmt_t)*tasmt), 0.6)
 
 write.table(rec_devs, paste(pdir, hs, hcr, scn, itr,"/Rec_dev/rec_devs.txt", sep = ""))
 
@@ -142,7 +143,7 @@ for (tstep in 1:length(asmt_t)){
     
     #****************************************************************************
     #Step 3: Generate files for operating model
-    OM_fun_tvry(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, tasmt, new_cdat, rec_devs)
+    OM_fun_tvry_adj(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, tasmt, new_cdat, rec_devs)
     
     #*********************************************************************************
     #Step 5: Compute TAC using OM model output
@@ -167,7 +168,7 @@ for (tstep in 1:length(asmt_t)){
     
     #Generate TAC based on current harvest control rule
     #specify years over which to compute biology (yrb) and exploitation pattern (yrf)
-    TAC_mat = HCR1a_pbf_byfleet_cap(ssout=om_out, dat = SPRmat, yr=yr_end, SSBtrs=ssb_thr, SSBlim=ssb_lim, Ftgt=om_ftgt, cr=cr_all, err=1, Fmin=Fmin,hs=hs,hcr=hcr,scn=scn,itr=itr,tstep=tstep,yrb=c(2002:2004),yrf=c(2017:2019))
+    TAC_mat = HCR1a_pbf_byfleet_f(ssout=om_out, dat = SPRmat, yr=yr_end, SSBtrs=ssb_thr, SSBlim=ssb_lim, Ftgt=om_ftgt, cr=cr_all, err=1, Fmin=Fmin,hs=hs,hcr=hcr,scn=scn,itr=itr,tstep=tstep,yrb=c(2002:2004),yrf=c(2017:2019))
     
     #Save the TAC
     file_tac = paste(pdir, hs, hcr, scn, itr,"/TAC",(tstep+1),".RData", sep = "")
@@ -192,11 +193,11 @@ for (tstep in 1:length(asmt_t)){
     
     #****************************************************************************
     #Step 3: Generate files for operating model
-    OM_fun_tvry(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, tasmt, new_cdat, rec_devs)
+    OM_fun_tvry_adj(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, tasmt, new_cdat, rec_devs)
     
     #*****************************************************************************************
     #Step 4: Run the estimation model , can choose to run with (datatype =3) or without observation error (datatype=2)
-    EM_fun(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, datatype=2)
+    EM_fun_adj(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, datatype=2)
     
     #****************************************************************************
     #Step 5: Compute TAC using EM model output
@@ -220,7 +221,7 @@ for (tstep in 1:length(asmt_t)){
     em_ftgt = (em_out$derived_quants %>% filter(Label == "annF_SPR"))$Value
     
     #Generate TAC based on current harvest control rule
-    TAC_mat = HCR1a_pbf_byfleet_cap(ssout=om_out, dat = SPRmat, yr=yr_end, SSBtrs=ssb_thr, SSBlim=ssb_lim, Ftgt=om_ftgt, cr=cr_all, err=1, Fmin=Fmin,hs=hs,hcr=hcr,scn=scn,itr=itr,tstep=tstep,yrb=c(2002:2004),yrf=c(2017:2019))
+    TAC_mat = HCR1a_pbf_byfleet_f(ssout=em_out, dat = SPRmat, yr=yr_end, SSBtrs=ssb_thr, SSBlim=ssb_lim, Ftgt=om_ftgt, cr=cr_all, err=1, Fmin=Fmin,hs=hs,hcr=hcr,scn=scn,itr=itr,tstep=tstep,yrb=c(2002:2004),yrf=c(2017:2019))
     
     #Save the TAC
     file_tac = paste(pdir, hs, hcr, scn, itr,"/TAC",(tstep+1),".RData", sep = "")
@@ -286,7 +287,7 @@ catch_sum = as.data.frame(catch_sim %>% group_by(Yr,Fleet) %>% summarise(ctot=su
 Cdat = dcast(catch_sum, Yr ~ Fleet, value.var="ctot")
 
 #Combine all output into a list
-outmat1 = data.frame(Year = 2021:2050, R = Rdat, Rem = R_em, SSB = SPBdat, SSBem = SPB_em, Depletion = Ddat, Dem = D_em, SPR = SPRdat, SPRem = SPR_em, Catch = Tdat, Cem = C_em, TAC = TACdt, TACws = TACWsdt,TACwl = TACWldt, TACwm = TACWmdt, TACepo = TACEdt, B0em = B0dat, B0om = B0dat_om, Bsmry= Btot, Bsmryem= Btot_em, Ftgtom = Ftgt_om, Ftgtem = Ftgt_em)
+outmat1 = data.frame(Year = 2021:((length(asmt_t)*3)+2020), R = Rdat, Rem = R_em, SSB = SPBdat, SSBem = SPB_em, Depletion = Ddat, Dem = D_em, SPR = SPRdat, SPRem = SPR_em, Catch = Tdat, Cem = C_em, TAC = TACdt, TACws = TACWsdt,TACwl = TACWldt, TACwm = TACWmdt, TACepo = TACEdt, B0em = B0dat, B0om = B0dat_om, Bsmry= Btot, Bsmryem= Btot_em, Ftgtom = Ftgt_om, Ftgtem = Ftgt_em)
 outmat=cbind(outmat1, Cdat[,2:26])
 outlist= list(outmat=outmat)
 
