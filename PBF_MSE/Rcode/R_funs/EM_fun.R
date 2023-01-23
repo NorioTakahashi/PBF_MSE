@@ -31,7 +31,7 @@ EM_fun <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, 
   #read the new .dat file with error from the bootstrap run
   #USING SECTION 2 here for perfect data - as for some reason r4ss is not reading section 1 or 3
   #working on this issue
-  boot_dat=SS_readdat(file = "data.ss_new", section = datatype)
+  boot_dat=SS_readdat(file = "data_expval.ss")
   
   #extract end year
   endYear = boot_dat$endyr
@@ -76,6 +76,17 @@ EM_fun <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, 
     #change the number of size frequency observations
     boot_new$Nobs_per_method = boot_dat$Nobs_per_method
   }
+  
+  #need to change the effective sample size back to original
+  #according to Lee's in ISC21/PBFWG-1/07
+  for (j in 1:22){
+    boot_new$sizefreq_data_list[[j]]$Nsamp=boot_new$sizefreq_data_list[[j]]$Nsamp/10
+  }
+  
+  #need to change the added constant back to original
+  #according to Lee's in ISC21/PBFWG-1/07
+  boot_new$mincomp_per_method[10]=0.01
+  boot_new$mincomp_per_method[11]=0.01
   
   path_dat = paste(pdir, hs, hcr, scn, itr,"/",tstep,"/EM/EMdat.ss",sep="")
   SS_writedat(boot_new, path_dat)

@@ -4,8 +4,8 @@
 #' 1) add more catch data
 #' 2) changes the numbers of catch data
 #' 3) changes the end year
-#' 4) adds dummy CPUE data and error for the two PBF CPUE indexes.
-#' 5) adds dummy size frequency data and effective sample size
+#' 4) adds dummy CPUE data and error for each of the two NPALB indexes: 0.1 and 0.12
+#' 5) adds dummy size comp data and effective sample size
 #' 
 #' It then writes a new data file into the working directory
 #'
