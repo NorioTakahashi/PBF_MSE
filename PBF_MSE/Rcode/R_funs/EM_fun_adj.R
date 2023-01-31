@@ -111,7 +111,7 @@ EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tst
                      "aspm"  = , # w/o size
                      "aspmr" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM.ss", sep = ""),
                      "aspm-size"  = , # w/ size
-                     "aspmr-size" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM_size.ss", sep = ""),
+                     "aspmr-size" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM_size.ss", sep = "")
                      )
     
     if(is.null(ctl_in)){
