@@ -12,10 +12,12 @@
 #' @param itr iteration number
 #' @param tstep time step of the OM
 #' @param datatype specifies section of new datafile from which to extract,  2 = perfect data, 3 = data with error 
+#' @param aspm aspm switch: = NULL (no ASPM, default) "ASPM", "ASPM-size" (w/ size), "ASPMR" (ASPM-R), "ASPMR-size" (ASPM-R w/ size) 
 #' 
 #' @author Desiree Tommasi
 
-EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, datatype){
+EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tstep, datatype,
+                       aspm = NULL){
  
 #*****************************CHANGE DAT FILE*******************************************   
   # Enter new catch data given the TAC into the PAR file
@@ -97,7 +99,29 @@ EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tst
   shell(cmd = command_mv)
   
 #***************************CHANGE CTL FILE*************************************
-  ctl_in = paste(sdir, scn, "SAM/control_simple_1719_2021.ss", sep = "")
+  if(is.null(aspm)){ # not use ASPM option
+
+    ctl_in = paste(sdir, scn, "SAM/control_simple_1719_2021.ss", sep = "")
+    
+  } else { # use ASPM option
+    
+    aspm <- str_to_lower(aspm)
+
+    ctl_in <- switch(aspm,
+                     "aspm"  = , # w/o size
+                     "aspmr" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM.ss", sep = ""),
+                     "aspm-size"  = , # w/ size
+                     "aspmr-size" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM_size.ss", sep = ""),
+                     )
+    
+    if(is.null(ctl_in)){
+      ctl_in = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM.ss", sep = "")
+      message("aspm argument is not correct, set to ASPM anyway to continue....")
+    }
+
+  }
+
+  #ctl_in = paste(sdir, scn, "SAM/control_simple_1719_2021.ss", sep = "")
   ctl_out = paste(pdir, hs, hcr, scn, itr, "/",tstep,"/EM/EM.ctl", sep="")
   
   blk_end = 2020 + asmt_t[tstep] + (tasmt-1)
@@ -123,6 +147,7 @@ EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tst
   
   #turn off estimation of parameters 
   #starter_dat$last_estimation_phase = 0
+  if(aspm == "aspmr" || aspm == "aspmr-size") starter_dat$last_estimation_phase = 0
   
   #write new starter file
   dir_start = paste(pdir, hs, hcr, scn, itr, "/", tstep,"/EM/", sep = "")
