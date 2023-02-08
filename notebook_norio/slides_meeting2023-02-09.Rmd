@@ -1,0 +1,144 @@
+---
+title: "Untitled"
+author: "norio"
+date: "2023/02/09"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(patchwork)
+
+em_type <- c("SS", "ASPMR", "ASPMR-size")
+
+path_outlist <- c(
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1"
+)
+          
+path_recdevs <- c(
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1/Rec_dev",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1/Rec_dev",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1/Rec_dev"
+)
+
+```
+
+```{r user_functons, include = FALSE}
+
+# read function
+read_outlist <- function(path = ""){
+  
+  fullpath <- paste0(path, "/outlist.txt")
+
+  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
+    select(-X1)
+
+  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+
+  return(tb)
+  
+}
+
+read_recdevs <- function(path = ""){
+  
+  fullpath <- paste0(path, "/rec_devs.txt")
+
+  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
+    select(-X1)
+
+  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+  
+  tb <- mutate(tb, Year = 2021:2044)
+
+  return(tb)
+  
+}
+
+# plot function
+plot_output <- function(tb, which_item = ""){
+
+  x_item <- if_else(which_item == "rec_devs", "Year", "outmat.Year")
+  y_item <- if_else(which_item == "rec_devs", "x", paste0("outmat.", which_item))
+  title <- if_else(which_item == "rec_devs", "Future generated rec_devs for itr = 1", paste0("Future simulated ", which_item, " with HCR #15"))
+  
+  pp <- ggplot(tb, aes(x = eval(parse(text = x_item)), y = eval(parse(text = y_item)), colour = em_type)) +
+          geom_line() +
+          geom_point() +
+          labs(
+            title = title,
+            x = "Year", y = which_item
+          ) +
+          theme(plot.title = element_text(size = 10), axis.text.x = element_text(size = 6),
+                legend.position = "bottom")
+
+}
+
+```
+
+```{r read_process_outputs, include = FALSE}
+
+# read outputs into list of tibbles
+outls <- map(path_outlist, read_outlist)
+recdevls <- map(path_recdevs, read_recdevs)
+
+# make tidy output data from the list of tibbles above
+for(ii in seq_along(em_type)){
+  
+  if(ii == 1){
+    
+    out_tb <- outls[[ii]] %>% mutate(em_type = em_type[ii])
+    recdev_tb <- recdevls[[ii]] %>% mutate(em_type = em_type[ii])
+    
+  }else{
+    
+    out_tb <- outls[[ii]] %>% mutate(em_type = em_type[ii]) %>% bind_rows(out_tb)
+    recdev_tb <- recdevls[[ii]] %>% mutate(em_type = em_type[ii]) %>% bind_rows(recdev_tb)
+    
+  }
+
+}
+
+```
+
+## やったこと
+
+- DesireeさんのGithubリポジトリでアップデータされた最新版
+- MSEのrコード EMの関数にASPMのためのオプションを加えた（引数で指定）
+  * EM用のEM.ctlの書き出しの部分
+  * EMではアセスのときのcontrolファイルを使いまわし
+  * ASPMとASPM-R用（w/o and w/ size）のcontrolファイルを用意
+- EMを以下にして、MSEの実行 (HCR15, iteration=1)
+  * SS（約21.5時間）
+  * ASPM-R w/o size（約1時間）
+  * ASPM-R w/ size（約5時間）
+
+## やったこと（続き）
+
+- 特にSSとASPM-R w/ sizeの場合、タイムステップが進むとEMでの推定に時間がかかるようになる
+  * SS: 0.3 0.5 3.5 4.0 2.5 3.5 3.5 3.5 (<- hour)
+  * ASPM-R w/ size: 5 5 7 12 20 90 (<- min) 3 (<- hour) 4 (<- min)
+
+## Outputs: TAC and SSB
+
+```{r plot_outputs, echo = FALSE}
+
+# plot TAC, SSB
+plot_output(out_tb, "TAC") + theme(legend.position = "none") + plot_output(out_tb, "SSB") 
+
+```
+
+## rec_devs
+
+```{r plot_recdev, echo = FALSE}
+
+print(plot_output(recdev_tb, "rec_devs"))
+
+```
+

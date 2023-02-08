@@ -1,0 +1,125 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+exercise
+
+plot TAC and SSB
+
+```{r setup, include = FALSE}
+
+library(tidyverse)
+library(patchwork)
+
+```
+
+```{r}
+
+em_type <- c("SS", "ASPMR", "ASPMR-size")
+
+path_outlist <- c(
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1"
+)
+          
+path_recdevs <- c(
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1/Rec_dev",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1/Rec_dev",
+  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1/Rec_dev"
+)
+
+# read function
+read_outlist <- function(path = ""){
+  
+  fullpath <- paste0(path, "/outlist.txt")
+
+  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
+    select(-X1)
+
+  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+
+  return(tb)
+  
+}
+
+read_recdevs <- function(path = ""){
+  
+  fullpath <- paste0(path, "/rec_devs.txt")
+
+  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
+    select(-X1)
+
+  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+  
+  tb <- mutate(tb, Year = 2021:2044)
+
+  return(tb)
+  
+}
+
+# plot function
+plot_output <- function(tb, which_item = ""){
+
+  x_item <- if_else(which_item == "rec_devs", "Year", "outmat.Year")
+  y_item <- if_else(which_item == "rec_devs", "x", paste0("outmat.", which_item))
+  title <- if_else(which_item == "rec_devs", "Future generated rec_devs for itr = 1", paste0("Future simulated ", which_item, " with HCR #15"))
+  
+  pp <- ggplot(tb, aes(x = eval(parse(text = x_item)), y = eval(parse(text = y_item)), colour = em_type)) +
+          geom_line() +
+          geom_point() +
+          labs(
+            title = title,
+            x = "Year", y = which_item
+          ) +
+          theme(plot.title = element_text(size = 10), axis.text.x = element_text(size = 6),
+                legend.position = "bottom")
+}
+
+# read outputs into list of tibbles
+outls <- map(path_outlist, read_outlist)
+recdevls <- map(path_recdevs, read_recdevs)
+
+# make tidy output data from the list of tibbles above
+for(ii in seq_along(em_type)){
+  
+  if(ii == 1){
+    
+    out_tb <- outls[[ii]] %>% mutate(em_type = em_type[ii])
+    recdev_tb <- recdevls[[ii]] %>% mutate(em_type = em_type[ii])
+    
+  }else{
+    
+    out_tb <- outls[[ii]] %>% mutate(em_type = em_type[ii]) %>% bind_rows(out_tb)
+    recdev_tb <- recdevls[[ii]] %>% mutate(em_type = em_type[ii]) %>% bind_rows(recdev_tb)
+    
+  }
+
+}
+
+# plot TAC, SSB, rec_devs
+plot_output(out_tb, "TAC") + theme(legend.position = "none") + plot_output(out_tb, "SSB") 
+#map(c("TAC", "SSB"), plot_output, tb = out_tb)
+
+print(plot_output(recdev_tb, "rec_devs"))
+
+#ggplot(data = tb, mapping = aes(x = outmat.Year, y = outmat.SSB)) +
+#  geom_line(colour = "green") +
+#  geom_point(colour = "green") +
+#  labs(
+#    title = "Future simulated TAC with HCR#??",
+#    x = "Year", y = "SSB"
+#  )
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
