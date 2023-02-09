@@ -108,10 +108,12 @@ EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tst
     aspm <- str_to_lower(aspm)
 
     ctl_in <- switch(aspm,
-                     "aspm"  = , # w/o size
-                     "aspmr" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM.ss", sep = ""),
-                     "aspm-size"  = , # w/ size
-                     "aspmr-size" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM_size.ss", sep = "")
+                     # w/o size
+                     "aspm"  = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM.ss", sep = ""),
+                     "aspmr" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPMR.ss", sep = ""),
+                     # w/ size
+                     "aspm-size"  = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPM_size.ss", sep = ""),
+                     "aspmr-size" = paste(sdir, scn, "SAM/control_simple_1719_2021_ASPMR_size.ss", sep = "")
                      )
     
     if(is.null(ctl_in)){
@@ -147,8 +149,7 @@ EM_fun_adj <- function(pdir, sdir, hs, hcr, scn, hsw, hcrw, scnw, pwin, itr, tst
   
   #turn off estimation of parameters 
   #starter_dat$last_estimation_phase = 0
-  if(aspm == "aspmr" || aspm == "aspmr-size") starter_dat$last_estimation_phase = 0
-  
+
   #write new starter file
   dir_start = paste(pdir, hs, hcr, scn, itr, "/", tstep,"/EM/", sep = "")
   SS_writestarter(starter_dat, dir_start)
