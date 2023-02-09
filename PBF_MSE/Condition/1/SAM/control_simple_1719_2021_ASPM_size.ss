@@ -119,7 +119,7 @@
             -5             5             0             0            99             6         -4          0          0          0          0          0          0          0 # SR_autocorr
 # timevary SR parameters
  -5 5 -0.134989 0 2.5 6 1 # SR_regime_BLK4add_1982
-1 #do_recdev:  0=none; 1=devvector (R=F(SSB)+dev); 2=deviations (R=F(SSB)+dev); 3=deviations (R=R0*dev; dev2=R-f(SSB)); 4=like 3 with sum(dev2) adding penalty
+0 #do_recdev:  0=none; 1=devvector (R=F(SSB)+dev); 2=deviations (R=F(SSB)+dev); 3=deviations (R=R0*dev; dev2=R-f(SSB)); 4=like 3 with sum(dev2) adding penalty
 1983 # first year of main recr_devs; early devs can preceed this era
 2020 # last year of main recr_devs; forecast devs start in following year
 1 #_recdev phase 
