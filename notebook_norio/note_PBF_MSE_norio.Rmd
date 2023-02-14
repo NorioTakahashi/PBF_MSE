@@ -22,24 +22,30 @@ library(r4ss)
 
 ```{r get_and_plot_outlist}
 
-em_type <- c("SS", "ASPMR", "ASPMR-size")
+my_path <- "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15"
 
-path_outlist <- c(
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1",
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1",
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1"
-)
-          
-path_recdevs <- c(
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_SS/1/Rec_dev",
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR/1/Rec_dev",
-  "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15/1_test_ASPMR-size/1/Rec_dev"
-)
+em_type <- c("SS", "ASPMR", "ASPMR-size")
+iter_no <- 5
+
+make_path <- function(em_type, my_path = "", iter_no, rec_dev = FALSE){
+  
+  if(rec_dev)
+    fullpath <- file.path(my_path, paste0("1_test_", em_type), as.character(iter_no), "Rec_dev")
+  else
+    fullpath <- file.path(my_path, paste0("1_test_", em_type), as.character(iter_no))
+  
+  return(fullpath)
+  
+}
+
+path_outlist <- map_chr(em_type, make_path, my_path = my_path, iter_no = iter_no)
+path_recdevs <- map_chr(em_type, make_path, my_path = my_path, iter_no = iter_no, rec_dev = TRUE)
+
 
 # read function
 read_outlist <- function(path = ""){
   
-  fullpath <- paste0(path, "/outlist.txt")
+  fullpath <- file.path(path, "outlist.txt")
 
   tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
     select(-X1)
@@ -52,7 +58,7 @@ read_outlist <- function(path = ""){
 
 read_recdevs <- function(path = ""){
   
-  fullpath <- paste0(path, "/rec_devs.txt")
+  fullpath <- file.path(path, "rec_devs.txt")
 
   tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
     select(-X1)
@@ -66,11 +72,11 @@ read_recdevs <- function(path = ""){
 }
 
 # plot function
-plot_output <- function(tb, which_item = ""){
+plot_output <- function(tb, which_item = "", iter_no){
 
   x_item <- if_else(which_item == "rec_devs", "Year", "outmat.Year")
   y_item <- if_else(which_item == "rec_devs", "x", paste0("outmat.", which_item))
-  title <- if_else(which_item == "rec_devs", "Future generated rec_devs for itr = 1", paste0("Future simulated ", which_item, " with HCR #15"))
+  title <- if_else(which_item == "rec_devs", paste0("Future generated rec_devs for itr = ", as.character(iter_no)), paste0("Future simulated ", which_item, " with HCR #15 for itr =", as.character(iter_no)))
   
   pp <- ggplot(tb, aes(x = eval(parse(text = x_item)), y = eval(parse(text = y_item)), colour = em_type)) +
           geom_line() +
@@ -105,10 +111,10 @@ for(ii in seq_along(em_type)){
 }
 
 # plot TAC, SSB, rec_devs
-plot_output(out_tb, "TAC") + theme(legend.position = "none") + plot_output(out_tb, "SSB") 
+plot_output(out_tb, "TAC", iter_no) + theme(legend.position = "none") + plot_output(out_tb, "SSB", iter_no) 
 #map(c("TAC", "SSB"), plot_output, tb = out_tb)
 
-print(plot_output(recdev_tb, "rec_devs"))
+print(plot_output(recdev_tb, "rec_devs", iter_no))
 
 #ggplot(data = tb, mapping = aes(x = outmat.Year, y = outmat.SSB)) +
 #  geom_line(colour = "green") +
