@@ -7,9 +7,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
-exercise
-
-plot TAC and SSB
+### 2023年3月のISC-PBFWGに向けてのノート
 
 ```{r setup, include = FALSE}
 
@@ -19,6 +17,9 @@ library(patchwork)
 library(r4ss)
 
 ```
+
+ASPMRのオプションを使用することの検討
+EMをSS、ASPMR、ASPMR-sizeにしたときの結果（TACとSSB）の比較図をプロット
 
 ```{r get_and_plot_outlist}
 
@@ -126,6 +127,8 @@ print(plot_output(recdev_tb, "rec_devs", iter_no))
 
 ```
 
+tstepの最後の方のEM（SSとASPMR-size）による推定結果を比較してみる
+
 ```{r compare_EM_results}
 
 dir1 <- character(8)
@@ -161,6 +164,28 @@ SSplotComparisons(mod.sum[[8]], legendlabels = c("SS", "ASPMR-size"))
 #SS_plots(mod2)
 
 ```
+
+福田さんから頼まれたこと：HCR#15（FtargetがFspr30％）とHCR#11（FtargetがFspr20％）のケースを走らせて（no errorで）、どれくらいのTACになるか比較する
+
+```{r compare_HCR15_vs_HCR11}
+
+my_path <- "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15"
+my_path <- file.path(my_path, "1_SS_full_run_no_error_HCR")
+hcr_no <- c(15, 11)
+max_iter <- 25
+
+fullpath <- file.path(paste0(my_path, hcr_no[[1]]), as.character(4), "outlist.txt")
+
+tb <- suppressMessages(read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE)) %>% 
+  select(-X1)
+
+colnames(tb) <- suppressMessages(suppressWarnings(colnames(read_delim(fullpath, delim = " "))))
+
+tb <- mutate(tb, iter = 4)
+
+
+```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
