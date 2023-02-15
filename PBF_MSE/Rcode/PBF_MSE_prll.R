@@ -12,16 +12,19 @@ library(foreach)
 library(doParallel)
 library(r4ss)
 library(Rcpp)
-library(dplyr)
+#library(dplyr)
+library(tidyverse)
 library(reshape2)
 
 #Specify path of parent directory
-pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
+#pdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/"
+pdir = "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/"
 #set working directory to where all functions needed are stored
 setwd(paste(pdir,"Rcode/R_funs", sep = ""))
 
 #Specify the path of conditioned initial OM
-sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
+#sdir = "C:/Users/desiree.tommasi/Documents/Bluefin/PBF_MSE/Condition/"
+sdir = "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/Condition/"
 
 #source all the functions
 file.sources = list.files()
