@@ -48,10 +48,17 @@ read_outlist <- function(path = ""){
   
   fullpath <- file.path(path, "outlist.txt")
 
-  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
-    select(-X1)
+  tb <- suppressMessages(
+    
+          read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE)
+          
+        ) %>% select(-X1)
 
-  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+  colnames(tb) <- suppressMessages(suppressWarnings(
+    
+                    colnames(read_delim(fullpath, delim = " "))
+                    
+                  ))
 
   return(tb)
   
@@ -61,10 +68,17 @@ read_recdevs <- function(path = ""){
   
   fullpath <- file.path(path, "rec_devs.txt")
 
-  tb <- read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE) %>% 
-    select(-X1)
+  tb <- suppressMessages(
+    
+          read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE)
+          
+        ) %>% select(-X1)
 
-  colnames(tb) <- colnames(read_delim(fullpath, delim = " "))
+  colnames(tb) <- suppressMessages(suppressWarnings(
+                    
+                    colnames(read_delim(fullpath, delim = " "))
+  
+                  ))
   
   tb <- mutate(tb, Year = 2021:2044)
 
@@ -77,7 +91,7 @@ plot_output <- function(tb, which_item = "", iter_no){
 
   x_item <- if_else(which_item == "rec_devs", "Year", "outmat.Year")
   y_item <- if_else(which_item == "rec_devs", "x", paste0("outmat.", which_item))
-  title <- if_else(which_item == "rec_devs", paste0("Future generated rec_devs for itr = ", as.character(iter_no)), paste0("Future simulated ", which_item, " with HCR #15 for itr =", as.character(iter_no)))
+  title <- if_else(which_item == "rec_devs", paste0("Generated rec_devs for itr = ", as.character(iter_no)), paste0("Simulated ", which_item, " with HCR #15 for itr =", as.character(iter_no)))
   
   pp <- ggplot(tb, aes(x = eval(parse(text = x_item)), y = eval(parse(text = y_item)), colour = em_type)) +
           geom_line() +
@@ -174,14 +188,23 @@ my_path <- file.path(my_path, "1_SS_full_run_no_error_HCR")
 hcr_no <- c(15, 11)
 max_iter <- 25
 
-fullpath <- file.path(paste0(my_path, hcr_no[[1]]), as.character(4), "outlist.txt")
+read_outlist_mutate_iter_no <- function(fullpath = "", iter_no = 1){
+  
+  # add iteration number to path
+  fullpath <- file.path(paste0(fullpath, as.character(iter_no)))
 
-tb <- suppressMessages(read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE)) %>% 
-  select(-X1)
+  # read outlist for one iteration and mutate iteration number column
+  tb <- read_outlist(fullpath) %>% mutate(iter = iter_no)
+  
+  return(tb)
+  
+}
 
-colnames(tb) <- suppressMessages(suppressWarnings(colnames(read_delim(fullpath, delim = " "))))
+fullpath <- file.path(paste0(my_path, hcr_no[[1]]))
 
-tb <- mutate(tb, iter = 4)
+map(1:max_iter, read_outlist_mutate_iter_no, fullpath = fullpath)
+
+tb <- read_outlist(fullpath) %>% mutate(iter = 4)
 
 
 ```
