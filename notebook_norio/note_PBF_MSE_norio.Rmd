@@ -188,23 +188,54 @@ my_path <- file.path(my_path, "1_SS_full_run_no_error_HCR")
 hcr_no <- c(15, 11)
 max_iter <- 25
 
-read_outlist_mutate_iter_no <- function(fullpath = "", iter_no = 1){
+read_outlist_all <- function(my_path = "", hcr_no = c(15), max_iter = NULL){
   
-  # add iteration number to path
-  fullpath <- file.path(paste0(fullpath, as.character(iter_no)))
+  for(ii in seq_along(hcr_no)){
+    
+    for(jj in seq(max_iter)){
+      
+      # add HCR no. and iteration number to path
+      fullpath <- file.path(paste0(my_path, hcr_no[[ii]]), as.character(jj))
+      
+      # read outlist for one iteration and add HCR no. and iteration number column
+      tb_tmp <- read_outlist(fullpath) %>%
+        mutate(hcr = hcr_no[[ii]], iter = jj)
+      
+      if(ii == 1 && jj == 1){
+        tb <- tb_tmp
+      }else{
+        tb <- bind_rows(tb, tb_tmp)
+      }
 
-  # read outlist for one iteration and mutate iteration number column
-  tb <- read_outlist(fullpath) %>% mutate(iter = iter_no)
-  
+    }
+    
+  }
+
   return(tb)
   
 }
 
-fullpath <- file.path(paste0(my_path, hcr_no[[1]]))
+tb_all <- map_dfr(list(hcr_no = hcr_no), read_outlist_all, my_path = my_path, max_iter = max_iter)
 
-map(1:max_iter, read_outlist_mutate_iter_no, fullpath = fullpath)
+ggplot(tb_all, aes(x = outmat.Year, y = outmat.TAC)) +
+  geom_point(aes(colour = factor(iter))) +
+  geom_line(aes(colour = factor(iter))) +
+  facet_wrap(~ hcr, nrow = 1) +
+  theme(legend.position = "none")
 
-tb <- read_outlist(fullpath) %>% mutate(iter = 4)
+ggplot(tb_all, aes(x = outmat.Year, y = outmat.SSB)) +
+  geom_line(aes(colour = factor(iter))) +
+  facet_wrap(~ hcr, nrow = 1) +
+  theme(legend.position = "none")
+
+tb_all %>%
+  group_by(hcr, outmat.Year) %>% 
+  summarise(quant10 = quantile(outmat.TAC, c(0.1)),
+            quant50 = quantile(outmat.TAC, c(0.5)),
+            quant90 = quantile(outmat.TAC, c(0.9))) %>% 
+  ggplot(aes(x = outmat.Year, y = quant50)) +
+    geom_ribbon(aes(ymin = quant10, ymax = quant90, colour = factor(hcr), fill = factor(hcr)), alpha = 0.2, linetype = "dotted") +
+    geom_line(aes(colour = factor(hcr)), size = 1.2)
 
 
 ```
