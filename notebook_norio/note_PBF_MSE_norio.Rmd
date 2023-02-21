@@ -188,6 +188,7 @@ my_path <- file.path(my_path, "1_SS_full_run_no_error_HCR")
 hcr_no <- c(15, 11)
 max_iter <- 25
 
+# read outlist for ALL iterations and ALL HCR, and then make tidy tibble
 read_outlist_all <- function(my_path = "", hcr_no = c(15), max_iter = NULL){
   
   for(ii in seq_along(hcr_no)){
@@ -220,13 +221,21 @@ tb_all <- map_dfr(list(hcr_no = hcr_no), read_outlist_all, my_path = my_path, ma
 ggplot(tb_all, aes(x = outmat.Year, y = outmat.TAC)) +
   geom_point(aes(colour = factor(iter))) +
   geom_line(aes(colour = factor(iter))) +
+  labs(x = "Year", y = "TAC") +
   facet_wrap(~ hcr, nrow = 1) +
-  theme(legend.position = "none")
+  theme(
+    axis.text.x = element_text(size = rel(1.), angle = -90, hjust = 1, vjust = 0.4),
+    legend.position = "none"
+  )
 
 ggplot(tb_all, aes(x = outmat.Year, y = outmat.SSB)) +
   geom_line(aes(colour = factor(iter))) +
+  labs(x = "Year", y = "SSB") +
   facet_wrap(~ hcr, nrow = 1) +
-  theme(legend.position = "none")
+  theme(
+    axis.text.x = element_text(size = rel(1.), angle = -90, hjust = 1, vjust = 0.4),
+    legend.position = "none"
+  )
 
 tb_all %>%
   group_by(hcr, outmat.Year) %>% 
@@ -235,7 +244,8 @@ tb_all %>%
             quant90 = quantile(outmat.TAC, c(0.9))) %>% 
   ggplot(aes(x = outmat.Year, y = quant50)) +
     geom_ribbon(aes(ymin = quant10, ymax = quant90, colour = factor(hcr), fill = factor(hcr)), alpha = 0.2, linetype = "dotted") +
-    geom_line(aes(colour = factor(hcr)), size = 1.2)
+    geom_line(aes(colour = factor(hcr)), size = 1.2) +
+    labs(x = "Year", y = "TAC", colour = "HCR", fill = "HCR")
 
 
 ```

@@ -1,0 +1,134 @@
+---
+title: "HCR11とHCR15の比較"
+author: "norio"
+date: "2023/02/21"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(patchwork)
+
+my_path <- "D:/Git_space/ISC/PBF_test_ASPM/PBF_MSE/1/15"
+my_path <- file.path(my_path, "1_SS_full_run_no_error_HCR")
+hcr_no <- c(15, 11)
+max_iter <- 25
+
+```
+
+```{r user_functons, include = FALSE}
+
+# read function
+read_outlist <- function(path = ""){
+  
+  fullpath <- file.path(path, "outlist.txt")
+
+  tb <- suppressMessages(
+    
+          read_delim(fullpath, delim = " ", skip = 1, col_names = FALSE)
+          
+        ) %>% select(-X1)
+
+  colnames(tb) <- suppressMessages(suppressWarnings(
+    
+                    colnames(read_delim(fullpath, delim = " "))
+                    
+                  ))
+
+  return(tb)
+  
+}
+
+# read outlist for ALL iterations and ALL HCR, and then make tidy tibble
+read_outlist_all <- function(my_path = "", hcr_no = c(15), max_iter = NULL){
+  
+  for(ii in seq_along(hcr_no)){
+    
+    for(jj in seq(max_iter)){
+      
+      # add HCR no. and iteration number to path
+      fullpath <- file.path(paste0(my_path, hcr_no[[ii]]), as.character(jj))
+      
+      # read outlist for one iteration and add HCR no. and iteration number column
+      tb_tmp <- read_outlist(fullpath) %>%
+        mutate(hcr = hcr_no[[ii]], iter = jj)
+      
+      if(ii == 1 && jj == 1){
+        tb <- tb_tmp
+      }else{
+        tb <- bind_rows(tb, tb_tmp)
+      }
+
+    }
+    
+  }
+
+  return(tb)
+  
+}
+
+```
+
+```{r read_process_outputs, include = FALSE}
+
+tb_all <- map_dfr(list(hcr_no = hcr_no), read_outlist_all, my_path = my_path, max_iter = max_iter)
+
+```
+
+### HCR11とHCR15の比較（ベースはHCR1a）
+
+- HCR11
+  * LRP=7.7%B0, ThRP=20%B0, TRP=**Fspr20%**, minF=5%Ftarg
+- HCR15
+  * LRP=7.7%B0, ThRP=20%B0, TRP=**Fspr30%**, minF=5%Ftarg
+  
+計算の設定は観測などのエラーは無しで、反復は25回（Desireeさんのデフォルト）。
+
+### TAC (中央値，80%確率区間)
+
+* 中央値は大きくは違わないが、ばらつきはかなり違う。
+* HCR11は、運用初期にTACを増加できる反面、将来に不安定になりばらつきが大きくなる傾向がある。
+
+```{r plot_TAC_envelope, echo = FALSE, message = FALSE}
+
+tb_all %>%
+  group_by(hcr, outmat.Year) %>% 
+  summarise(quant10 = quantile(outmat.TAC, c(0.1)),
+            quant50 = quantile(outmat.TAC, c(0.5)),
+            quant90 = quantile(outmat.TAC, c(0.9))) %>% 
+  ggplot(aes(x = outmat.Year, y = quant50)) +
+    geom_ribbon(aes(ymin = quant10, ymax = quant90, colour = factor(hcr), fill = factor(hcr)), alpha = 0.2, linetype = "dotted") +
+    geom_line(aes(colour = factor(hcr)), size = 1.2) +
+    labs(x = "Year", y = "TAC", colour = "HCR", fill = "HCR")
+
+```
+
+### TACとSSB（25回のシミュレーションの結果）
+
+```{r plot_simulation_worms, echo = FALSE}
+
+
+ggplot(tb_all, aes(x = outmat.Year, y = outmat.TAC)) +
+  geom_point(aes(colour = factor(iter))) +
+  geom_line(aes(colour = factor(iter))) +
+  labs(x = "Year", y = "TAC") +
+  facet_wrap(~ hcr, nrow = 1) +
+  theme(
+    axis.text.x = element_text(size = rel(1.), angle = -90, hjust = 1, vjust = 0.4),
+    legend.position = "none"
+  )
+
+ggplot(tb_all, aes(x = outmat.Year, y = outmat.SSB)) +
+  geom_line(aes(colour = factor(iter))) +
+  labs(x = "Year", y = "SSB") +
+  facet_wrap(~ hcr, nrow = 1) +
+  theme(
+    axis.text.x = element_text(size = rel(1.), angle = -90, hjust = 1, vjust = 0.4),
+    legend.position = "none"
+  )
+
+```
+
